@@ -46,6 +46,8 @@ pipeline {
                 dir('S3') {
                     sh "terraform plan -out=tfplan -var=environment=${params.ENVIRONMENT}"
                 }
+            }
+        }
 
         stage('Terraform Apply') {
             when {
