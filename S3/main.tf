@@ -1,5 +1,15 @@
-provider "aws" {
+﻿provider "aws" {
   region = "ap-south-1"
+}
+
+variable "bucket_name" {
+  description = "Name of the S3 bucket"
+  type        = string
+}
+
+variable "environment" {
+  description = "Deployment environment"
+  type        = string
 }
 
 resource "aws_s3_bucket" "my_bucket" {

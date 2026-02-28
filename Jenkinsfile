@@ -22,13 +22,17 @@ pipeline {
 
         stage('Terraform Init') {
             steps {
-                sh 'terraform init'
+                dir('S3') {
+                    sh 'terraform init'
+                }
             }
         }
-
+        
         stage('Terraform Validate') {
             steps {
-                sh 'terraform validate'
+                dir('S3') {
+                    sh 'terraform validate'
+                }
             }
         }
 
@@ -39,9 +43,9 @@ pipeline {
                 }
             }
             steps {
-                sh "terraform plan -out=tfplan -var=environment=${params.ENVIRONMENT}"
-            }
-        }
+                dir('S3') {
+                    sh "terraform plan -out=tfplan -var=environment=${params.ENVIRONMENT}"
+                }
 
         stage('Terraform Apply') {
             when {
@@ -51,7 +55,9 @@ pipeline {
                 }
             }
             steps {
-                sh "terraform apply -auto-approve tfplan -var=environment=${params.ENVIRONMENT}"
+                dir('S3') {
+                    sh "terraform apply -auto-approve tfplan -var=environment=${params.ENVIRONMENT}"
+                }
             }
         }
 
@@ -60,7 +66,9 @@ pipeline {
                 expression { params.TERRAFORM_ACTION == 'destroy' }
             }
             steps {
-                sh "terraform destroy -auto-approve -var=environment=${params.ENVIRONMENT}"
+                dir('S3') {
+                    sh "terraform destroy -auto-approve -var=environment=${params.ENVIRONMENT}"
+                }
             }
         }
     }
