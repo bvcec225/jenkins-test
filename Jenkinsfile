@@ -3,6 +3,7 @@ pipeline {
 
     parameters {
         choice(name: 'TERRAFORM_ACTION', choices: "plan\napply\ndestroy", description: 'Terraform action to perform')
+        choice(name: 'ENVIRONMENT', choices: "dev\nint\nuat\nprod\ndr", description: 'Target environment')
     }
 
     environment {
@@ -38,7 +39,7 @@ pipeline {
                 }
             }
             steps {
-                sh 'terraform plan -out=tfplan'
+                sh "terraform plan -out=tfplan -var=environment=${params.ENVIRONMENT}"
             }
         }
 
@@ -50,7 +51,7 @@ pipeline {
                 }
             }
             steps {
-                sh 'terraform apply -auto-approve tfplan'
+                sh "terraform apply -auto-approve tfplan -var=environment=${params.ENVIRONMENT}"
             }
         }
 
@@ -59,7 +60,7 @@ pipeline {
                 expression { params.TERRAFORM_ACTION == 'destroy' }
             }
             steps {
-                sh 'terraform destroy -auto-approve'
+                sh "terraform destroy -auto-approve -var=environment=${params.ENVIRONMENT}"
             }
         }
     }
