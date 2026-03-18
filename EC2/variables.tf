@@ -9,3 +9,9 @@ variable "instance_type" {
 variable "ami_id" {
   default = "ami-0f5ee92e2d63afc18"
 }
+
+variable "environment" {
+  description = "Deployment environment"
+  type        = string
+  default     = "dev"
+}

@@ -3,6 +3,8 @@ pipeline {
 
     parameters {
         choice(name: 'TERRAFORM_ACTION', choices: "plan\napply\ndestroy", description: 'Terraform action to perform')
+        choice(name: 'ENVIRONMENT', choices: "dev\nint\nuat\nprod\ndr", description: 'Target environment')
+        choice(name: 'MODULE', choices: "S3\nEC2\nALL", description: 'Terraform module/directory to operate on (or ALL)')
     }
 
     environment {
@@ -21,13 +23,25 @@ pipeline {
 
         stage('Terraform Init') {
             steps {
-                sh 'terraform init'
+                script {
+                    def mods = params.MODULE == 'ALL' ? ['S3','EC2'] : [params.MODULE]
+                    parallel mods.collectEntries { m -> ["Init-${m}" : {
+                        dir(m) { sh 'terraform init' }
+                    }]
+                    }
+                }
             }
         }
-
+        
         stage('Terraform Validate') {
             steps {
-                sh 'terraform validate'
+                script {
+                    def mods = params.MODULE == 'ALL' ? ['S3','EC2'] : [params.MODULE]
+                    parallel mods.collectEntries { m -> ["Validate-${m}" : {
+                        dir(m) { sh 'terraform validate' }
+                    }]
+                    }
+                }
             }
         }
 
@@ -38,7 +52,13 @@ pipeline {
                 }
             }
             steps {
-                sh 'terraform plan -out=tfplan'
+                script {
+                    def mods = params.MODULE == 'ALL' ? ['S3','EC2'] : [params.MODULE]
+                    parallel mods.collectEntries { m -> ["Plan-${m}" : {
+                        dir(m) { sh "terraform plan -out=tfplan -var=environment=${params.ENVIRONMENT}" }
+                    }]
+                    }
+                }
             }
         }
 
@@ -50,7 +70,13 @@ pipeline {
                 }
             }
             steps {
-                sh 'terraform apply -auto-approve tfplan'
+                script {
+                    def mods = params.MODULE == 'ALL' ? ['S3','EC2'] : [params.MODULE]
+                    parallel mods.collectEntries { m -> ["Apply-${m}" : {
+                        dir(m) { sh "terraform apply -auto-approve tfplan -var=environment=${params.ENVIRONMENT}" }
+                    }]
+                    }
+                }
             }
         }
 
@@ -59,7 +85,13 @@ pipeline {
                 expression { params.TERRAFORM_ACTION == 'destroy' }
             }
             steps {
-                sh 'terraform destroy -auto-approve'
+                script {
+                    def mods = params.MODULE == 'ALL' ? ['S3','EC2'] : [params.MODULE]
+                    parallel mods.collectEntries { m -> ["Destroy-${m}" : {
+                        dir(m) { sh "terraform destroy -auto-approve -var=environment=${params.ENVIRONMENT}" }
+                    }]
+                    }
+                }
             }
         }
     }
