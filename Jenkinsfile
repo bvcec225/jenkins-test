@@ -69,4 +69,4 @@ pipeline {
             echo 'Pipeline Completed'
         }
     }
-}
+}hello world
